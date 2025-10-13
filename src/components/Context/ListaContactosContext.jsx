@@ -1,102 +1,96 @@
-import { createContext, useReducer } from "react";
+import React, { createContext } from "react";
+import useGlobalReducer from "../../../src/hooks/useGlobalReducer";
 import ListaContactosReducer from "./ListaContactosReducer";
+import { FETCH_START, FETCH_OK, FETCH_NOT_OK } from "./ListaContactosActions";
 
 export const ListaContactosContext = createContext();
 
-const initialstate = {
-  contacts: [],
-  loading: false,
-  error: false
-};
-
-const URL = "https://playground.4geeks.com";
+const URL = "https://playground.4geeks.com/contact";
 const USER = "guilleNZ";
 
+const initialState = {
+  contacts: [],
+  loading: false,
+  error: false,
+};
+
 const ListaContactosProvider = ({ children }) => {
-  const [state, dispatch] = useReducer(ListaContactosReducer, initialstate);
+  const [state, dispatch] = useGlobalReducer(ListaContactosReducer, initialState);
 
-  const normalizar = (data) => {
-    
-    if (!data) return [];
-    if (Array.isArray(data)) return data;
-    if (data.contacts && Array.isArray(data.contacts)) return data.contacts;
-    
-    if (data.data && Array.isArray(data.data)) return data.data;
-    return [];
-  };
-
+  
   const leerContactos = async () => {
-    dispatch({ type: "FETCH_START" });
+    dispatch({ type: FETCH_START });
     try {
-      const response = await fetch(`${URL}/contact/agendas/${USER}/contacts`);
-      const data = await response.json();
-      const contacts = normalizar(data);
-      dispatch({ type: "FETCH_OK", payload: contacts });
-    } catch (error) {
-      dispatch({ type: "FETCH_NOT_OK" });
-      console.error("leerContactos error:", error);
+      const res = await fetch(`${URL}/agendas/${USER}/contacts`);
+      const data = await res.json();
+      
+      const contacts = Array.isArray(data) ? data : data.contacts || [];
+      dispatch({ type: FETCH_OK, payload: contacts });
+    } catch (err) {
+      console.error("leerContactos:", err);
+      dispatch({ type: FETCH_NOT_OK });
     }
   };
 
+  
   const agregarContacto = async (contact) => {
-    dispatch({ type: "FETCH_START" });
+    dispatch({ type: FETCH_START });
     try {
       await fetch(`${URL}/contact`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...contact, agenda_slug: USER })
+        body: JSON.stringify({ ...contact, agenda_slug: USER }),
       });
-      
       await leerContactos();
-    } catch (error) {
-      dispatch({ type: "FETCH_NOT_OK" });
-      console.error("agregarContacto error:", error);
+    } catch (err) {
+      console.error("agregarContacto:", err);
+      dispatch({ type: FETCH_NOT_OK });
     }
   };
 
+  
   const editarContacto = async (id, contact) => {
-    dispatch({ type: "FETCH_START" });
+    dispatch({ type: FETCH_START });
     try {
       await fetch(`${URL}/contact/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...contact, agenda_slug: USER })
+        body: JSON.stringify({ ...contact, agenda_slug: USER }),
       });
       await leerContactos();
-    } catch (error) {
-      dispatch({ type: "FETCH_NOT_OK" });
-      console.error("editarContacto error:", error);
+    } catch (err) {
+      console.error("editarContacto:", err);
+      dispatch({ type: FETCH_NOT_OK });
     }
   };
 
+  
   const eliminarContacto = async (id) => {
-    dispatch({ type: "FETCH_START" });
+    dispatch({ type: FETCH_START });
     try {
-      await fetch(`${URL}/contact/${id}`, {
-        method: "DELETE"
-      });
+      await fetch(`${URL}/contact/${id}`, { method: "DELETE" });
       await leerContactos();
-    } catch (error) {
-      dispatch({ type: "FETCH_NOT_OK" });
-      console.error("eliminarContacto error:", error);
+    } catch (err) {
+      console.error("eliminarContacto:", err);
+      dispatch({ type: FETCH_NOT_OK });
     }
   };
 
-  const getContactLocal = (id) => {
-    
-    const found = state.contacts.find((c) => String(c.id) === String(id));
-    return found ?? null;
-  };
+  
+  const getContactLocal = (id) => state.contacts.find((c) => String(c.id) === String(id)) || null;
 
   return (
-    <ListaContactosContext.Provider value={{
-      state,
-      leerContactos,
-      agregarContacto,
-      editarContacto,
-      eliminarContacto,
-      getContactLocal
-    }}>
+    <ListaContactosContext.Provider
+      value={{
+        state,
+        dispatch,
+        leerContactos,
+        agregarContacto,
+        editarContacto,
+        eliminarContacto,
+        getContactLocal,
+      }}
+    >
       {children}
     </ListaContactosContext.Provider>
   );

@@ -1,17 +1,18 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
-import ContactosContainer from './components/ContactosContainer';
-import AddContact from './components/AddContact';
+import { BrowserRouter } from "react-router-dom";
+import RoutesApp from "./routes";
+import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
+import ScrollToTop from "./components/ScrollToTop";
 
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path={"/"} element={<ContactosContainer />} />
-        <Route path={"/contact"} element={<ContactosContainer />} />
-        <Route path={"/addcontact"} element={<AddContact />} />
-        <Route path={"/addcontact/:id"} element={<AddContact />} />
-      </Routes>
+      <ScrollToTop />
+      <Navbar />
+      <RoutesApp />
+      <Footer />
     </BrowserRouter>
   );
 }
+
 export default App;
