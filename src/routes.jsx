@@ -12,7 +12,7 @@ export default function RoutesApp() {
       <Route path="/demo" element={<Demo />} />
       <Route path="/single" element={<Single />} />
 
-      {/* Contact app */}
+      
       <Route path="/contact" element={<ContactosContainer />} />
       <Route path="/addcontact" element={<AddContact />} />
       <Route path="/addcontact/:id" element={<AddContact />} />

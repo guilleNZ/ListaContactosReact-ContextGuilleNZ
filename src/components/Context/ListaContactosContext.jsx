@@ -23,11 +23,9 @@ const ListaContactosProvider = ({ children }) => {
     try {
       const res = await fetch(`${URL}/agendas/${USER}/contacts`);
       const data = await res.json();
-      
-      const contacts = Array.isArray(data) ? data : data.contacts || [];
-      dispatch({ type: FETCH_OK, payload: contacts });
+      dispatch({ type: FETCH_OK, payload: data.contacts || [] });
     } catch (err) {
-      console.error("leerContactos:", err);
+      console.error("Error al leer contactos:", err);
       dispatch({ type: FETCH_NOT_OK });
     }
   };
@@ -36,14 +34,15 @@ const ListaContactosProvider = ({ children }) => {
   const agregarContacto = async (contact) => {
     dispatch({ type: FETCH_START });
     try {
-      await fetch(`${URL}/contact`, {
+      const res = await fetch(`${URL}/agendas/${USER}/contacts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...contact, agenda_slug: USER }),
+        body: JSON.stringify(contact),
       });
+      if (!res.ok) throw new Error("Error en POST");
       await leerContactos();
     } catch (err) {
-      console.error("agregarContacto:", err);
+      console.error("Error al crear contacto:", err);
       dispatch({ type: FETCH_NOT_OK });
     }
   };
@@ -52,38 +51,42 @@ const ListaContactosProvider = ({ children }) => {
   const editarContacto = async (id, contact) => {
     dispatch({ type: FETCH_START });
     try {
-      await fetch(`${URL}/contact/${id}`, {
+      const res = await fetch(`${URL}/agendas/${USER}/contacts/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...contact, agenda_slug: USER }),
+        body: JSON.stringify(contact),
       });
+      if (!res.ok) throw new Error("Error en PUT");
       await leerContactos();
     } catch (err) {
-      console.error("editarContacto:", err);
+      console.error("Error al editar contacto:", err);
       dispatch({ type: FETCH_NOT_OK });
     }
   };
 
-  
+
   const eliminarContacto = async (id) => {
     dispatch({ type: FETCH_START });
     try {
-      await fetch(`${URL}/contact/${id}`, { method: "DELETE" });
+      const res = await fetch(`${URL}/agendas/${USER}/contacts/${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Error en DELETE");
       await leerContactos();
     } catch (err) {
-      console.error("eliminarContacto:", err);
+      console.error("Error al eliminar contacto:", err);
       dispatch({ type: FETCH_NOT_OK });
     }
   };
 
-  
-  const getContactLocal = (id) => state.contacts.find((c) => String(c.id) === String(id)) || null;
+
+  const getContactLocal = (id) =>
+    state.contacts.find((c) => String(c.id) === String(id)) || null;
 
   return (
     <ListaContactosContext.Provider
       value={{
         state,
-        dispatch,
         leerContactos,
         agregarContacto,
         editarContacto,
