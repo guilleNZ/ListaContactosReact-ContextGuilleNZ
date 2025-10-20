@@ -1,78 +1,59 @@
 import React, { useContext, useEffect, useState } from "react";
-import { ListaContactosContext } from "./Context/ListaContactosContext";
-import { useNavigate, useParams, Link } from "react-router-dom";
+import { ListaContactosContext } from "./Context/ListaContactosContext.jsx";
+import { useNavigate, useParams } from "react-router-dom";
 
-const AddContact = () => {
+export default function AddContact() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { agregarContacto, editarContacto, getContactLocal } =
-    useContext(ListaContactosContext);
+  const { agregarContacto, editarContacto, getContactLocal } = useContext(ListaContactosContext);
 
-  const [form, setForm] = useState({
-    full_name: "",
-    email: "",
-    phone: "",
-    address: "",
-  });
+  const [form, setForm] = useState({ name: "", email: "", phone: "", address: "" });
 
   useEffect(() => {
     if (id) {
-      const contacto = getContactLocal(id);
-      if (contacto) setForm(contacto);
+      const c = getContactLocal(id);
+      if (c) setForm({
+        name: c.name || c.name || "",
+        email: c.email || "",
+        phone: c.phone || "",
+        address: c.address || "",
+      });
     }
+    
   }, [id]);
 
-  const handleChange = (e) =>
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (id) await editarContacto(id, form);
-    else await agregarContacto(form);
+    if (!form.name || !form.email) {
+      alert("Nombre y email obligatorios");
+      return;
+    }
+
+    if (id) {
+      const ok = await editarContacto(id, form);
+      if (!ok) { alert("Error al editar. Revisa consola."); return; }
+    } else {
+      const ok = await agregarContacto(form);
+      if (!ok) { alert("Error al crear. Revisa consola."); return; }
+    }
     navigate("/contact");
   };
 
   return (
-    <div className="container my-5">
-      <h2>{id ? "Editar contacto" : "Agregar contacto"}</h2>
+    <div className="container">
+      <h3>{id ? "Editar contacto" : "Añadir contacto"}</h3>
       <form onSubmit={handleSubmit}>
-        <input
-          className="form-control mb-2"
-          name="full_name"
-          placeholder="Nombre completo"
-          value={form.full_name}
-          onChange={handleChange}
-        />
-        <input
-          className="form-control mb-2"
-          name="email"
-          placeholder="Email"
-          value={form.email}
-          onChange={handleChange}
-        />
-        <input
-          className="form-control mb-2"
-          name="phone"
-          placeholder="Teléfono"
-          value={form.phone}
-          onChange={handleChange}
-        />
-        <input
-          className="form-control mb-2"
-          name="address"
-          placeholder="Dirección"
-          value={form.address}
-          onChange={handleChange}
-        />
-        <button className="btn btn-primary me-2" type="submit">
-          Guardar
-        </button>
-        <Link to="/contact" className="btn btn-secondary">
-          Volver
-        </Link>
+        <input className="form-control mb-2" name="name" placeholder="Nombre completo" value={form.name} onChange={handleChange} />
+        <input className="form-control mb-2" name="email" placeholder="Email" value={form.email} onChange={handleChange} />
+        <input className="form-control mb-2" name="phone" placeholder="Teléfono" value={form.phone} onChange={handleChange} />
+        <input className="form-control mb-2" name="address" placeholder="Dirección" value={form.address} onChange={handleChange} />
+        <div style={{ display: "flex", gap: "8px" }}>
+          <button type="submit" className="btn btn-primary">{id ? "Guardar" : "Crear"}</button>
+          <button type="button" className="btn" onClick={() => navigate(-1)}>Cancelar</button>
+        </div>
       </form>
     </div>
   );
-};
-
-export default AddContact;
+}
